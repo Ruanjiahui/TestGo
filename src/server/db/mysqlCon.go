@@ -5,13 +5,14 @@ import (
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"strings"
+	"time"
 )
 
 //数据库配置
 const (
 	userName = "root"
-	password = "Celtics5342009"
-	ip       = "127.0.0.1"
+	password = "pama123456"
+	ip       = "192.168.101.10"
 	port     = "3306"
 	dbName   = "debug"
 )
@@ -31,16 +32,17 @@ func InitDB() {
 	DB, err = sql.Open("mysql", path)
 	//是否打开数据库成功
 	if err != nil {
-		fmt.Println("opon database fail : ", err)
+		fmt.Println("open database fail : ", err)
 		return
 	}
 	//设置数据库最大连接数
-	DB.SetConnMaxLifetime(100)
+	DB.SetMaxOpenConns(10)
 	//设置上数据库最大闲置连接数
-	DB.SetMaxIdleConns(10)
+	DB.SetMaxIdleConns(5)
+	DB.SetConnMaxLifetime(10 * time.Minute)
 	//验证连接
 	if err := DB.Ping(); err != nil {
-		fmt.Println("opon database fail : ", err)
+		fmt.Println("open database fail : ", err)
 		return
 	}
 	fmt.Println("connnect success")

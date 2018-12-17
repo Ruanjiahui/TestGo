@@ -43,4 +43,11 @@ type BugCommitReq struct {
 
 	//安装类型
 	PhoneType string
+
+	//使用者
+	User string
+
+	Ip string
+
+	Port string
 }

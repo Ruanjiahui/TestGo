@@ -10,7 +10,7 @@ import (
 func HttpInit() {
 	s := http.Server{
 		//监听端口
-		Addr: ":8890",
+		Addr: ":8181",
 		//读取超时
 		ReadTimeout: 10 * time.Second,
 		//写入超时
@@ -28,7 +28,8 @@ func HttpInit() {
 	//s.ListenAndServe()
 
 	//监听服务
-	err := s.ListenAndServeTLS("/opt/ssl/214793394590511.pem", "/opt/ssl/214793394590511.key")
+	//err := s.ListenAndServeTLS("/opt/ssl/214793394590511.pem", "/opt/ssl/214793394590511.key")
+	err := s.ListenAndServe()
 	if err != nil {
 		fmt.Println(err)
 	}

@@ -20,20 +20,22 @@ func InsertBugCommit(req *Req.BugCommitReq) (bool, int64, error) {
 	//}
 
 	//准备sql语句
-	stmt, err := DB.Prepare("INSERT INTO debug.debugdata (debugSource, debugBround, debugModel, debugTime , debugOS , debugOSVersion , debugLon , debugLat , appPackage , appVersionCode , appVersionName , appInstallDate , appInstallUpdateDate , phoneType) VALUES (? , ? , ? , now() , ? , ? , ? , ? , ? , ? , ? , ? , ? , ?)")
+	stmt, err := DB.Prepare("INSERT INTO debug.debugdata (debugSource, debugBround, debugModel, debugTime , debugOS , debugOSVersion , debugLon , debugLat , appPackage , appVersionCode , appVersionName , appInstallDate , appInstallUpdateDate , phoneType , user , ip , port) VALUES (? , ? , ? , now() , ? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ? , ?)")
 	if err != nil {
 		fmt.Println("Prepare fail : ", err)
 		return false, 0, err
 	}
 
 	//将参数传递到sql语句中并且执行
-	res, err := stmt.Exec(req.BugData, req.Bround, req.Model, req.DebugOS, req.DebugOSVersion, req.DebugLon, req.DebugLat, req.AppPackage, req.AppVersionCode, req.AppVersionName, req.AppInstallDate, req.AppInstallUpdateDate, req.PhoneType)
+	res, err := stmt.Exec(req.BugData, req.Bround, req.Model, req.DebugOS, req.DebugOSVersion, req.DebugLon, req.DebugLat, req.AppPackage, req.AppVersionCode, req.AppVersionName, req.AppInstallDate, req.AppInstallUpdateDate, req.PhoneType , req.User , req.Ip , req.Port)
 	if err != nil {
 		fmt.Println("Exec fail : ", err)
 		return false, 0, err
 	}
 	//插入数据返回id
 	debugID, err := res.LastInsertId()
+	//关闭资源
+	stmt.Close()
 	//事务提交
 	//err = tx.Commit()
 	//if err != nil{
@@ -48,7 +50,7 @@ func InsertBugCommit(req *Req.BugCommitReq) (bool, int64, error) {
 分页获取debug的数据
 */
 func SelectBugPageGet(req *Req.BugPageGetReq) ([]Resp.BugBean, error) {
-	stmt, err := DB.Prepare("SELECT debugID , debugBround , debugModel , debugTime , debugOS , debugOSVersion , appVersionName , appVersionCode from debug.debugdata limit ? offset ?")
+	stmt, err := DB.Prepare("SELECT debugID , debugBround , debugModel , debugTime , debugOS , debugOSVersion , appVersionName , appVersionCode , user from debug.debugdata limit ? offset ?")
 	if err != nil {
 		fmt.Println("Prepare fail : ", err)
 		return nil, err
@@ -67,7 +69,7 @@ func SelectBugPageGet(req *Req.BugPageGetReq) ([]Resp.BugBean, error) {
 	//循环读取数据库的数据
 	for rows.Next() {
 		bugBean := new(Resp.BugBean)
-		err = rows.Scan(&bugBean.DebugID, &bugBean.DebugBround, &bugBean.DebugModel, &bugBean.DebugTime, &bugBean.DebugOS, &bugBean.DebugOSVersion, &bugBean.AppVersionName, &bugBean.AppVersionCode)
+		err = rows.Scan(&bugBean.DebugID, &bugBean.DebugBround, &bugBean.DebugModel, &bugBean.DebugTime, &bugBean.DebugOS, &bugBean.DebugOSVersion, &bugBean.AppVersionName, &bugBean.AppVersionCode , &bugBean.User)
 		if err != nil {
 			fmt.Println("Scan fail : ", err)
 			return nil, err
@@ -81,6 +83,11 @@ func SelectBugPageGet(req *Req.BugPageGetReq) ([]Resp.BugBean, error) {
 	for i = 0; i < num; i++ {
 		cpbugBeanList[i] = bugBeanList[i]
 	}
+
+	//关闭资源
+	stmt.Close()
+	rows.Close()
+
 	return cpbugBeanList, err
 }
 
@@ -103,6 +110,9 @@ func BugGetTotal() (int, error) {
 		fmt.Println("bugGetTotal QueryRow fail : ", err)
 		return 0, err
 	}
+	//关闭资源
+	stmt.Close()
+
 	return length, err
 }
 
@@ -110,7 +120,9 @@ func BugGetTotal() (int, error) {
 分页获取debug的数据
 */
 func SelectBugDetail(req *Req.BugDetailReq) (Resp.BugBean, error) {
-	stmt, err := DB.Prepare("SELECT * from debug.debugdata where debugID = ?")
+	stmt, err := DB.Prepare("SELECT debugID , debugSource , debugBround , debugModel , debugTime , debugOS , debugOSVersion , " +
+		"debugLon , debugLat , appPackage , appVersionCode , appVersionName , appInstallDate , appInstallUpdateDate , phoneType , " +
+		"user , ip , port from debug.debugdata where debugID = ?")
 	if err != nil {
 		fmt.Println("Prepare fail : ", err)
 		return Resp.BugBean{}, err
@@ -125,11 +137,16 @@ func SelectBugDetail(req *Req.BugDetailReq) (Resp.BugBean, error) {
 	bugBean := new(Resp.BugBean)
 	//循环读取数据库的数据
 	for rows.Next() {
-		err = rows.Scan(&bugBean.DebugID, &bugBean.DebugSource, &bugBean.DebugBround, &bugBean.DebugModel, &bugBean.DebugTime, &bugBean.DebugOS, &bugBean.DebugOSVersion, &bugBean.DebugLon, &bugBean.DebugLat, &bugBean.AppPackage, &bugBean.AppVersionCode, &bugBean.AppVersionName, &bugBean.AppInstallDate, &bugBean.AppInstallUpdateDate, &bugBean.PhoneType)
+		err = rows.Scan(&bugBean.DebugID, &bugBean.DebugSource, &bugBean.DebugBround, &bugBean.DebugModel, &bugBean.DebugTime, &bugBean.DebugOS, &bugBean.DebugOSVersion, &bugBean.DebugLon, &bugBean.DebugLat, &bugBean.AppPackage, &bugBean.AppVersionCode, &bugBean.AppVersionName, &bugBean.AppInstallDate, &bugBean.AppInstallUpdateDate, &bugBean.PhoneType , &bugBean.User , &bugBean.Ip , &bugBean.Port)
 		if err != nil {
 			fmt.Println("Scan fail : ", err)
 			return Resp.BugBean{}, err
 		}
 	}
+
+	//关闭资源
+	stmt.Close()
+	rows.Close()
+
 	return *bugBean, err
 }

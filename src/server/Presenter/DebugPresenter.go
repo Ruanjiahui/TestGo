@@ -14,9 +14,9 @@ import (
 */
 func BugCommit(bugCommitReq *Req.BugCommitReq) string {
 	//判断参数是否为空
-	if bugCommitReq.BugData == "" {
-		return Status.Illegal_parameter_fun()
-	}
+	//if bugCommitReq.BugData == "" {
+	//	return Status.Illegal_parameter_fun()
+	//}
 	//将数据插入数据库
 	result, _, err := db.InsertBugCommit(bugCommitReq)
 

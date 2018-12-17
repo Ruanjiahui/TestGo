@@ -30,4 +30,10 @@ type BugBean struct {
 	AppInstallUpdateDate string
 
 	PhoneType string
+
+	User string
+
+	Ip string
+
+	Port string
 }
